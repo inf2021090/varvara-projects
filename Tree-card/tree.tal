@@ -1,0 +1,140 @@
+|00 @System &vector $2 &pad $6 &r $2 &g $2 &b $2
+|20 @Screen &vector $2 &width $2 &height $2 &auto $1 &pad $1 &x $2 &y $2 &addr $2 &pixel $1 &sprite $1
+|90 @Mouse   [ &vector $2 &x $2 &y $2 &state $1 &pad $3 &scrollx $2 &scrolly $2 ]
+
+|0000
+@pointer [ &x $2 &y $2 ]
+
+|0100
+
+	#23ef .System/r DEO2
+	#3b7f .System/g DEO2
+	#665f .System/b DEO2
+
+    ( set mouse vector )
+    ;on-mouse .Mouse/vector DEO2
+
+	,draw-tree JSR
+
+    ( decorations )
+    #00c8 .Screen/x DEO2
+    #00c1 .Screen/y DEO2
+    ;ornament .Screen/addr DEO2
+    #03 .Screen/sprite DEO
+
+    ( decorations )
+    #00f0 .Screen/x DEO2
+    #00c0 .Screen/y DEO2
+    ;ornament .Screen/addr DEO2
+    #10 .Screen/sprite DEO
+
+    ( decorations )
+    #00c0 .Screen/x DEO2
+    #00e9 .Screen/y DEO2
+    ;gift .Screen/addr DEO2
+    #02 .Screen/sprite DEO
+
+    ( decorations )
+    #00d0 .Screen/x DEO2
+    #00e9 .Screen/y DEO2
+    ;gift .Screen/addr DEO2
+    #07 .Screen/sprite DEO
+
+    ( decorations )
+    #00a0 .Screen/x DEO2
+    #00e9 .Screen/y DEO2
+    ;gift .Screen/addr DEO2
+    #05 .Screen/sprite DEO
+
+BRK
+
+@draw-tree ( -- )
+
+	#0060 .Screen/y DEO2
+	( star )
+	#0103
+		DUP2 ,draw-line JSR
+	#0203 ,draw-line JSR
+		,draw-line JSR
+	( tree )
+	#8000
+	&tree
+		DUP #02 SFT #3f AND DUP ADD STH
+		DUP #0f AND STHr ADD #01 ,draw-line JSR
+		INC GTHk ,&tree JCN
+	POP2
+	( bark )
+	#1000
+	&bark
+		#0802 ,draw-line JSR
+		INC GTHk ,&bark JCN
+	POP2
+	( ground )
+	#ff03
+
+@draw-line ( width color -- )
+
+	,&c STR
+	#00 SWP
+		DUP2 .Screen/width DEI2 #01 SFT2 SWP2 SUB2 ,&o STR2
+	DUP2 ADD2 INC2 #0000
+	&l
+		DUP2 [ LIT2 &o $2 ] ADD2 .Screen/x DEO2
+		[ LIT &c $1 ] .Screen/pixel DEO
+		INC2 GTH2k ,&l JCN
+	POP2 POP2
+	.Screen/y DEI2k INC2 ROT DEO2
+
+JMP2r
+
+
+
+@on-mouse ( -> )
+
+    .Mouse/x DEI2 .Screen/x DEO2
+    .Mouse/y DEI2 .Screen/y DEO2
+    ( set sprite address )
+    ;pointer_icn .Screen/addr DEO2
+
+    ( jump if any button is pressed )
+    .Mouse/state DEI ,&pressed JCN
+    ,draw-pointer JMP
+
+    BRK
+
+    &pressed
+
+    ( draw sprite using color 1 and 0 in background )
+        ( set sprite address )
+        ;square .Screen/addr DEO2
+        #03 .Screen/sprite DEO
+BRK
+
+@draw-pointer ( -- )
+    ( send pointer position to screen )
+    .pointer/x LDZ2 .Screen/x DEO2
+    .pointer/y LDZ2 .Screen/y DEO2
+
+    ( clear sprite from foreground )
+    #40 .Screen/sprite DEO
+
+    ( update pointer position )
+    .Mouse/x DEI2 .pointer/x STZ2
+    .Mouse/y DEI2 .pointer/y STZ2
+
+    ( send pointer position to screen )
+    .pointer/x LDZ2 .Screen/x DEO2
+    .pointer/y LDZ2 .Screen/y DEO2
+
+    ( draw sprite with color 2 in foreground )
+    #4a .Screen/sprite DEO
+BRK
+
+@pointer_icn [ 80c0 e0f0 f8e0 1000 ]
+
+@square [ ff7e 3c18 183c 7eff ]
+
+( define the square sprite )
+@ornament 3c4e 9ffd f962 3c00
+
+@gift e7e7 e700 00e7 e7e7
